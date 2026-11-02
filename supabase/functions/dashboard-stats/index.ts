@@ -11,7 +11,7 @@ Deno.serve(async req=>{
  const url=Deno.env.get('SUPABASE_URL')!,anon=Deno.env.get('SUPABASE_ANON_KEY')!;
  const userClient=createClient(url,anon);
  const {data:{user},error:authError}=await userClient.auth.getUser(auth.slice(7));
- if(authError||!user||user.id!==Deno.env.get('DASHBOARD_ADMIN_UID'))return new Response('Forbidden',{status:403,headers});
+ if(authError||!user||user.id!=='07428ae1-3c18-4d14-99e9-8d1bed806019')return new Response('Forbidden',{status:403,headers});
  const admin=createClient(url,Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
  const from=new Date(Date.now()-30*86400000).toISOString();
  const {data,error}=await admin.from('analytics_events').select('site,event,created_at').gte('created_at',from).limit(10000);
