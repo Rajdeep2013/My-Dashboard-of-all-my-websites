@@ -10,4 +10,27 @@
 <section><h2>Websites</h2><div class="grid"><div class="card"><h2>📚 Visionary Study</h2><p class="muted">Study sessions, chapter visits, quiz starts and completions.</p><span class="pill pending">Tracking not connected</span></div><div class="card"><h2>📝 Notes Files</h2><p class="muted">Notes opened, created, edited and saved.</p><span class="pill pending">Tracking not connected</span></div><div class="card"><h2>🚀 Visionary Entrepreneurs</h2><p class="muted">Courses and learning engagement.</p><span class="pill">Phase 2 • Lovable</span></div></div></section>
 <section><h2>Activity overview</h2><div class="card"><table><thead><tr><th>Website</th><th>Visitors</th><th>Events</th><th>Status</th></tr></thead><tbody><tr><td>Visionary Study</td><td>—</td><td>—</td><td>Not connected</td></tr><tr><td>Notes Files</td><td>—</td><td>—</td><td>Not connected</td></tr><tr><td>Visionary Entrepreneurs</td><td>—</td><td>—</td><td>Deferred</td></tr></tbody></table></div></section>
 <section><h2>Integration checklist</h2><div class="card"><p>1. Identify the GitHub repositories for Visionary Study and Notes Files.</p><p>2. Add privacy-conscious tracking to both applications.</p><p>3. Connect both to a secure analytics backend with restricted dashboard access.</p><p>4. Replace the setup placeholders with real aggregate metrics.</p><p>5. Integrate Visionary Entrepreneurs later.</p><div class="notice">Privacy: Do not collect note contents, passwords, email addresses, or student identities as analytics events. Protect this dashboard with authentication before displaying private data.</div></div></section>
-</main><footer>Visionary Analytics • Built for responsible measurement</footer></body></html>
+<section><h2>Secure Supabase connection</h2><div class="card"><p class="muted">Enter your public Supabase project URL and publishable/anon key. Never enter a service-role or secret key here. Credentials are held in this browser tab only.</p><p><input id="sb-url" placeholder="https://your-project.supabase.co" autocomplete="off"></p><p><input id="sb-key" placeholder="Supabase publishable / anon key" autocomplete="off"></p><p><input id="sb-email" type="email" placeholder="Admin email" autocomplete="email"></p><p><input id="sb-password" type="password" placeholder="Admin password" autocomplete="off"></p><button id="connect">Sign in & load metrics</button><p id="connection-status" role="status" class="muted">Not connected</p></div></section>
+<section><h2>Last 30 days</h2><div class="grid"><div class="card"><small>Notes page views</small><div id="notes-count" class="number">—</div></div><div class="card"><small>Study page views</small><div id="study-count" class="number">—</div></div><div class="card"><small>Study quiz completions</small><div id="quiz-count" class="number">—</div></div><div class="card"><small>Notes saves</small><div id="save-count" class="number">—</div></div></div><p id="cap-warning" class="muted"></p></section></main><footer>Visionary Analytics • Built for responsible measurement</footer><script type="module">
+import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
+const $=id=>document.getElementById(id);
+$('connect').addEventListener('click',async()=>{
+ const status=$('connection-status');status.textContent='Connecting…';
+ try{
+  const url=$('sb-url').value.trim(),key=$('sb-key').value.trim();
+  if(!/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(url))throw Error('Enter a valid Supabase project URL.');
+  const client=createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}});
+  const {data,error}=await client.auth.signInWithPassword({email:$('sb-email').value,password:$('sb-password').value});
+  if(error)throw error;
+  $('sb-password').value='';
+  const res=await fetch(url+'/functions/v1/dashboard-stats',{headers:{Authorization:'Bearer '+data.session.access_token,apikey:key}});
+  if(!res.ok)throw Error('Metrics request rejected ('+res.status+'). Check function deployment and administrator UID.');
+  const stats=await res.json(),n=stats.counts?.notes||{},s=stats.counts?.study||{};
+  $('notes-count').textContent=n.page_view||0;$('study-count').textContent=s.page_view||0;
+  $('quiz-count').textContent=s.quiz_completed||0;$('save-count').textContent=n.note_saved||0;
+  $('views').textContent=(n.page_view||0)+(s.page_view||0);
+  $('cap-warning').textContent=stats.capped?'Event limit reached: counts may be incomplete.':'Aggregate event counts, not unique visitors.';
+  status.textContent='Connected. Showing last 30 days of recorded events.';
+ }catch(e){status.textContent=e.message||'Unable to connect'}
+});
+</script></body></html>
