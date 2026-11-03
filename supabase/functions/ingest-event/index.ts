@@ -18,7 +18,7 @@ Deno.serve(async req=>{
   const payload=JSON.parse(raw);
   if(!sites.has(payload.site)||!allowed.has(payload.event))return new Response('Invalid event',{status:400,headers});
   const client=createClient(Deno.env.get('SUPABASE_URL')!,Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
-  const {error}=await client.from('analytics_events').insert({site:payload.site,event:payload.event});
+  const {error}=await client.from('analytics_events').insert({site:payload.site,event:payload.event,session_label:typeof payload.session==='string'&&/^[a-f0-9]{16}$/.test(payload.session)?payload.session:null});
   if(error)throw error;
   return new Response(JSON.stringify({ok:true}),{status:202,headers});
  }catch{return new Response(JSON.stringify({error:'Unable to record event'}),{status:500,headers})}
