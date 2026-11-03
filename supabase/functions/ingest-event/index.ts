@@ -3,9 +3,9 @@
 // Optional TURNSTILE_SECRET_KEY for bot mitigation can be added later.
 // No user identifiers, IPs, note contents, or quiz answers are stored.
 import {createClient} from 'npm:@supabase/supabase-js@2';
-const allowed=new Set(['page_view','study_opened','quiz_started','quiz_completed','note_opened','note_saved','note_created']);
-const sites=new Set(['notes','study']);
-const origins=(Deno.env.get('ALLOWED_ORIGINS')||'').split(',').map(x=>x.trim()).filter(Boolean);
+const allowed=new Set(['page_view','study_opened','quiz_started','quiz_completed','note_opened','note_saved','note_created','course_opened','lesson_started','lesson_completed']);
+const sites=new Set(['notes','study','entrepreneurs']);
+const origins=['https://rajdeep2013.github.io','https://visionarycourses.lovable.app'];
 Deno.serve(async req=>{
  const origin=req.headers.get('origin')||'';
  const headers={'Access-Control-Allow-Origin':origins.includes(origin)?origin:'null','Vary':'Origin','Access-Control-Allow-Methods':'POST,OPTIONS','Access-Control-Allow-Headers':'content-type','Content-Type':'application/json'};
