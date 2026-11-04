@@ -13,10 +13,12 @@ Deno.serve(async req=>{
  const {data:{user},error:authError}=await userClient.auth.getUser(auth.slice(7));
  if(authError||!user||user.id!=='95d9423f-5d8d-424f-aec9-54d96538a44f')return new Response('Forbidden',{status:403,headers});
  const admin=createClient(url,Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
- const from=new Date(Date.now()-30*86400000).toISOString();
+ const days=Number(new URL(req.url).searchParams.get('days')||7);
+ if(![1,2,7,15,30].includes(days))return new Response(JSON.stringify({error:'Invalid reporting period'}),{status:400,headers});
+ const from=new Date(Date.now()-days*86400000).toISOString();
  const {data,error}=await admin.from('analytics_events').select('site,event,created_at').gte('created_at',from).limit(10000);
  if(error)return new Response('Server error',{status:500,headers});
- const counts={notes:{},study:{}};
- for(const row of data||[])counts[row.site][row.event]=(counts[row.site][row.event]||0)+1;
- return new Response(JSON.stringify({counts,window:'30 days',capped:(data||[]).length===10000}),{headers});
+ const counts={notes:{},study:{},entrepreneurs:{}};
+ for(const row of data||[]){if(!counts[row.site])counts[row.site]={};counts[row.site][row.event]=(counts[row.site][row.event]||0)+1;}
+ return new Response(JSON.stringify({counts,window:days+' days',days,capped:(data||[]).length===10000}),{headers});
 });
